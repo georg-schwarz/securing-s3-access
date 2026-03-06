@@ -1,0 +1,12 @@
+apiVersion: garage.rajsingh.info/v1alpha1
+kind: GarageBucket
+metadata:
+  name: bob-bucket
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "garage.labels" . | nindent 4 }}
+spec:
+  clusterRef:
+    name: {{ include "garage.fullname" . }}
+  quotas:
+    maxSize: {{ .Values.buckets.bob.maxSize }}

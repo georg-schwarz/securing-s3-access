@@ -1,0 +1,17 @@
+apiVersion: garage.rajsingh.info/v1alpha1
+kind: GarageKey
+metadata:
+  name: {{ include "garage.fullname" . }}-backend-key
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "garage.labels" . | nindent 4 }}
+spec:
+  clusterRef:
+    name: {{ include "garage.fullname" . }}
+  bucketPermissions:
+    - bucketRef: alice-bucket
+      read: {{ .Values.key.read }}
+      write: {{ .Values.key.write }}
+    - bucketRef: bob-bucket
+      read: {{ .Values.key.read }}
+      write: {{ .Values.key.write }}

@@ -1,0 +1,27 @@
+adminToken: "please-change-this-admin-token-in-production"
+
+cluster:
+  replicas: 1
+  zone: local
+  replication:
+    # factor must be <= replicas; use 1 for single-node demo
+    factor: 1
+  storage:
+    size: 10Gi
+
+buckets:
+  alice:
+    maxSize: 512Mi
+  bob:
+    maxSize: 512Mi
+
+key:
+  read: true
+  write: true
+
+garage-operator:
+  crds:
+    # CRDs are vendored into this chart's crds/ directory so Helm installs them
+    # before rendering any templates. Disable the subchart's own CRD installation
+    # to avoid a conflict between the two mechanisms.
+    install: false

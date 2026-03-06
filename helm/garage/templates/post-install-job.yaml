@@ -1,0 +1,145 @@
+{{/*
+Post-install Job: waits for operator-managed resources to become ready,
+then seeds demo objects into alice-bucket and bob-bucket.
+
+Credentials are read from the Secret that the garage-operator writes for the
+GarageKey resource (named {{ include "garage.fullname" . }}-backend-key).
+*/}}
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: {{ include "garage.fullname" . }}-post-install
+  labels:
+    {{- include "garage.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": post-install
+    "helm.sh/hook-weight": "-5"
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: {{ include "garage.fullname" . }}-post-install
+  labels:
+    {{- include "garage.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": post-install
+    "helm.sh/hook-weight": "-5"
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+rules:
+  - apiGroups: ["garage.rajsingh.info"]
+    resources: ["garageclusters", "garagebuckets", "garagekeys"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: [""]
+    resources: ["secrets"]
+    verbs: ["get"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: {{ include "garage.fullname" . }}-post-install
+  labels:
+    {{- include "garage.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": post-install
+    "helm.sh/hook-weight": "-5"
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: {{ include "garage.fullname" . }}-post-install
+subjects:
+  - kind: ServiceAccount
+    name: {{ include "garage.fullname" . }}-post-install
+    namespace: {{ .Release.Namespace }}
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "garage.fullname" . }}-post-install
+  labels:
+    {{- include "garage.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": post-install
+    "helm.sh/hook-weight": "0"
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+spec:
+  template:
+    metadata:
+      labels:
+        {{- include "garage.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: post-install
+    spec:
+      restartPolicy: OnFailure
+      serviceAccountName: {{ include "garage.fullname" . }}-post-install
+      initContainers:
+        - name: wait-and-extract
+          image: bitnami/kubectl:latest
+          imagePullPolicy: IfNotPresent
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              set -eu
+              NS="{{ .Release.Namespace }}"
+              KEY_NAME="{{ include "garage.fullname" . }}-backend-key"
+
+              echo "Waiting for GarageCluster to reach Running..."
+              kubectl wait garagecluster/{{ include "garage.fullname" . }} -n $NS \
+                --for=jsonpath='{.status.phase}'=Running --timeout=5m
+
+              echo "Waiting for GarageBuckets to become Ready..."
+              kubectl wait garagebucket/alice-bucket garagebucket/bob-bucket -n $NS \
+                --for=jsonpath='{.status.phase}'=Ready --timeout=3m
+
+              echo "Waiting for GarageKey to become Ready..."
+              kubectl wait garagekey/$KEY_NAME -n $NS \
+                --for=jsonpath='{.status.phase}'=Ready --timeout=3m
+
+              echo "Extracting credentials from Secret $KEY_NAME..."
+              ENDPOINT=$(kubectl get secret $KEY_NAME -n $NS \
+                -o jsonpath='{.data.endpoint}' | base64 -d)
+              ACCESS_KEY=$(kubectl get secret $KEY_NAME -n $NS \
+                -o jsonpath='{.data.access-key-id}' | base64 -d)
+              SECRET_KEY=$(kubectl get secret $KEY_NAME -n $NS \
+                -o jsonpath='{.data.secret-access-key}' | base64 -d)
+
+              echo "ENDPOINT=$ENDPOINT"     > /shared/creds.env
+              echo "AWS_ACCESS_KEY_ID=$ACCESS_KEY"    >> /shared/creds.env
+              echo "AWS_SECRET_ACCESS_KEY=$SECRET_KEY" >> /shared/creds.env
+              echo "Credentials written."
+          volumeMounts:
+            - name: shared
+              mountPath: /shared
+      containers:
+        - name: seed
+          image: amazon/aws-cli:latest
+          imagePullPolicy: IfNotPresent
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              set -eu
+              . /shared/creds.env
+
+              printf 'Only for alice' > /tmp/alice.txt
+              printf 'Only for bob'   > /tmp/bob.txt
+
+              AWS_DEFAULT_REGION=garage \
+              AWS_ACCESS_KEY_ID="$AWS_ACCESS_KEY_ID" \
+              AWS_SECRET_ACCESS_KEY="$AWS_SECRET_ACCESS_KEY" \
+                aws --endpoint-url "$ENDPOINT" s3api put-object \
+                  --bucket alice-bucket --key alice.txt --body /tmp/alice.txt
+
+              AWS_DEFAULT_REGION=garage \
+              AWS_ACCESS_KEY_ID="$AWS_ACCESS_KEY_ID" \
+              AWS_SECRET_ACCESS_KEY="$AWS_SECRET_ACCESS_KEY" \
+                aws --endpoint-url "$ENDPOINT" s3api put-object \
+                  --bucket bob-bucket --key bob.txt --body /tmp/bob.txt
+
+              echo "Seed objects uploaded."
+          volumeMounts:
+            - name: shared
+              mountPath: /shared
+      volumes:
+        - name: shared
+          emptyDir: {}

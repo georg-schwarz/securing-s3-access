@@ -1,0 +1,2 @@
+# Helm downloaded dependencies (reproduced via `helm dependency update`)
+helm/**/charts/*.tgz
