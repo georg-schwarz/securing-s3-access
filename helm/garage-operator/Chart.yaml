@@ -1,0 +1,9 @@
+apiVersion: v2
+name: garage-operator
+description: Garage S3 operator (wraps garage-operator by rajsinghtech), including CRD installation
+type: application
+version: 0.1.0
+dependencies:
+  - name: garage-operator
+    version: 0.0.40
+    repository: oci://ghcr.io/rajsinghtech/charts

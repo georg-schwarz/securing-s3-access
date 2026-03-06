@@ -3,4 +3,4 @@ dependencies:
   repository: oci://ghcr.io/rajsinghtech/charts
   version: 0.0.40
 digest: sha256:4793e888758365e11299514ff304845240ddad7fcbf5ae27f77a636871e2bb81
-generated: "2026-03-05T17:50:44.749696+01:00"
+generated: "2026-03-06T07:44:08.970196+01:00"

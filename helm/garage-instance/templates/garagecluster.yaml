@@ -1,10 +1,10 @@
 apiVersion: garage.rajsingh.info/v1alpha1
 kind: GarageCluster
 metadata:
-  name: {{ include "garage.fullname" . }}
+  name: {{ include "garage-instance.fullname" . }}
   namespace: {{ .Release.Namespace }}
   labels:
-    {{- include "garage.labels" . | nindent 4 }}
+    {{- include "garage-instance.labels" . | nindent 4 }}
 spec:
   replicas: {{ .Values.cluster.replicas }}
   zone: {{ .Values.cluster.zone }}
@@ -16,5 +16,5 @@ spec:
   admin:
     enabled: true
     adminTokenSecretRef:
-      name: {{ include "garage.fullname" . }}-admin-token
+      name: {{ include "garage-instance.fullname" . }}-admin-token
       key: admin-token

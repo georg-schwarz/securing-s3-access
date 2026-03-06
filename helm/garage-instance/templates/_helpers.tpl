@@ -1,14 +1,14 @@
 {{/*
 Expand the name of the chart.
 */}}
-{{- define "garage.name" -}}
+{{- define "garage-instance.name" -}}
 {{- default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
 {{/*
 Create a default fully qualified app name.
 */}}
-{{- define "garage.fullname" -}}
+{{- define "garage-instance.fullname" -}}
 {{- if .Values.fullnameOverride }}
 {{- .Values.fullnameOverride | trunc 63 | trimSuffix "-" }}
 {{- else }}
@@ -24,16 +24,16 @@ Create a default fully qualified app name.
 {{/*
 Create chart label.
 */}}
-{{- define "garage.chart" -}}
+{{- define "garage-instance.chart" -}}
 {{- printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
 {{/*
 Common labels.
 */}}
-{{- define "garage.labels" -}}
-helm.sh/chart: {{ include "garage.chart" . }}
-{{ include "garage.selectorLabels" . }}
+{{- define "garage-instance.labels" -}}
+helm.sh/chart: {{ include "garage-instance.chart" . }}
+{{ include "garage-instance.selectorLabels" . }}
 app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
 app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{- end }}
@@ -41,7 +41,7 @@ app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{/*
 Selector labels.
 */}}
-{{- define "garage.selectorLabels" -}}
-app.kubernetes.io/name: {{ include "garage.name" . }}
+{{- define "garage-instance.selectorLabels" -}}
+app.kubernetes.io/name: {{ include "garage-instance.name" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}

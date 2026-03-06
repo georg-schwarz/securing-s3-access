@@ -4,9 +4,9 @@ metadata:
   name: alice-bucket
   namespace: {{ .Release.Namespace }}
   labels:
-    {{- include "garage.labels" . | nindent 4 }}
+    {{- include "garage-instance.labels" . | nindent 4 }}
 spec:
   clusterRef:
-    name: {{ include "garage.fullname" . }}
+    name: {{ include "garage-instance.fullname" . }}
   quotas:
     maxSize: {{ .Values.buckets.alice.maxSize }}

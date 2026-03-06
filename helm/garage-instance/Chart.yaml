@@ -1,0 +1,15 @@
+apiVersion: v2
+name: garage-instance
+description: Garage S3 cluster instance with demo buckets and backend access key (requires garage-operator to be installed first)
+type: application
+version: 0.1.0
+appVersion: "0.0.40"
+keywords:
+  - garage
+  - s3
+  - object-storage
+home: https://garagehq.deuxfleurs.fr/
+sources:
+  - https://git.deuxfleurs.fr/Deuxfleurs/garage
+maintainers:
+  - name: tutorial-author

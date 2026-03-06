@@ -3,15 +3,15 @@ Post-install Job: waits for operator-managed resources to become ready,
 then seeds demo objects into alice-bucket and bob-bucket.
 
 Credentials are read from the Secret that the garage-operator writes for the
-GarageKey resource (named {{ include "garage.fullname" . }}-backend-key).
+GarageKey resource (named {{ include "garage-instance.fullname" . }}-backend-key).
 */}}
 ---
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: {{ include "garage.fullname" . }}-post-install
+  name: {{ include "garage-instance.fullname" . }}-post-install
   labels:
-    {{- include "garage.labels" . | nindent 4 }}
+    {{- include "garage-instance.labels" . | nindent 4 }}
   annotations:
     "helm.sh/hook": post-install
     "helm.sh/hook-weight": "-5"
@@ -20,9 +20,9 @@ metadata:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
-  name: {{ include "garage.fullname" . }}-post-install
+  name: {{ include "garage-instance.fullname" . }}-post-install
   labels:
-    {{- include "garage.labels" . | nindent 4 }}
+    {{- include "garage-instance.labels" . | nindent 4 }}
   annotations:
     "helm.sh/hook": post-install
     "helm.sh/hook-weight": "-5"
@@ -38,9 +38,9 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
-  name: {{ include "garage.fullname" . }}-post-install
+  name: {{ include "garage-instance.fullname" . }}-post-install
   labels:
-    {{- include "garage.labels" . | nindent 4 }}
+    {{- include "garage-instance.labels" . | nindent 4 }}
   annotations:
     "helm.sh/hook": post-install
     "helm.sh/hook-weight": "-5"
@@ -48,18 +48,18 @@ metadata:
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
-  name: {{ include "garage.fullname" . }}-post-install
+  name: {{ include "garage-instance.fullname" . }}-post-install
 subjects:
   - kind: ServiceAccount
-    name: {{ include "garage.fullname" . }}-post-install
+    name: {{ include "garage-instance.fullname" . }}-post-install
     namespace: {{ .Release.Namespace }}
 ---
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: {{ include "garage.fullname" . }}-post-install
+  name: {{ include "garage-instance.fullname" . }}-post-install
   labels:
-    {{- include "garage.labels" . | nindent 4 }}
+    {{- include "garage-instance.labels" . | nindent 4 }}
   annotations:
     "helm.sh/hook": post-install
     "helm.sh/hook-weight": "0"
@@ -68,11 +68,11 @@ spec:
   template:
     metadata:
       labels:
-        {{- include "garage.selectorLabels" . | nindent 8 }}
+        {{- include "garage-instance.selectorLabels" . | nindent 8 }}
         app.kubernetes.io/component: post-install
     spec:
       restartPolicy: OnFailure
-      serviceAccountName: {{ include "garage.fullname" . }}-post-install
+      serviceAccountName: {{ include "garage-instance.fullname" . }}-post-install
       initContainers:
         - name: wait-and-extract
           image: bitnami/kubectl:latest
@@ -82,10 +82,10 @@ spec:
             - |
               set -eu
               NS="{{ .Release.Namespace }}"
-              KEY_NAME="{{ include "garage.fullname" . }}-backend-key"
+              KEY_NAME="{{ include "garage-instance.fullname" . }}-backend-key"
 
               echo "Waiting for GarageCluster to reach Running..."
-              kubectl wait garagecluster/{{ include "garage.fullname" . }} -n $NS \
+              kubectl wait garagecluster/{{ include "garage-instance.fullname" . }} -n $NS \
                 --for=jsonpath='{.status.phase}'=Running --timeout=5m
 
               echo "Waiting for GarageBuckets to become Ready..."

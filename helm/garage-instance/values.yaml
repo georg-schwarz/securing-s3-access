@@ -18,10 +18,3 @@ buckets:
 key:
   read: true
   write: true
-
-garage-operator:
-  crds:
-    # CRDs are vendored into this chart's crds/ directory so Helm installs them
-    # before rendering any templates. Disable the subchart's own CRD installation
-    # to avoid a conflict between the two mechanisms.
-    install: false
