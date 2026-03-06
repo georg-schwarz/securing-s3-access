@@ -1,4 +1,8 @@
 gateway-helm:
+  config:
+    envoyGateway:
+      extensionApis:
+        enableEnvoyPatchPolicy: true
   deployment:
     envoyGateway:
       resources:

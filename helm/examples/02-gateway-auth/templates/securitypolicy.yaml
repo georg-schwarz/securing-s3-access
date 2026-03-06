@@ -11,6 +11,8 @@ spec:
       kind: HTTPRoute
       name: {{ include "example-02.fullname" . }}-s3
   extAuth:
+    headersToExtAuth:
+      - authorization
     http:
       backendRefs:
         - name: {{ include "example-02.fullname" . }}
@@ -18,4 +20,6 @@ spec:
           port: {{ .Values.service.port }}
       path: /api/02-gateway-auth/authz
       headersToBackend:
-        - authorization
+        - Authorization
+        - X-Amz-Date
+        - X-Amz-Content-Sha256

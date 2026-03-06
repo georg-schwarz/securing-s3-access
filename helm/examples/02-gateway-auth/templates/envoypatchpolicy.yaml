@@ -1,0 +1,51 @@
+{{/*
+EnvoyPatchPolicy: fix the Host header Envoy sends to Garage.
+
+Background
+──────────
+The authz endpoint (backend) signs the S3 request using the S3 endpoint URL,
+embedding the host: garage-instance.default.svc.cluster.local:3900.
+Garage validates the SigV4 signature against that canonical host. However,
+Envoy forwards the original client Host header (127.0.0.1) to Garage, so
+Garage reconstructs a different canonical request and rejects the signature.
+
+Envoy Gateway has no first-class API for this: RequestHeaderModifier forbids
+setting the Host header, and URLRewrite.hostname cannot include a port number.
+
+Fix: add host_rewrite_literal to the S3 route's RouteAction via JSON patch.
+This instructs Envoy to overwrite the upstream Host header after all HTTP
+filters have run, exactly as nginx's proxy_set_header Host did.
+
+Route index
+───────────
+Routes in the default/envoy-ingress/http RouteConfiguration are ordered by
+path specificity. The current order is:
+  route[0..2]: /api/login (exact, one entry per example namespace)
+  route[3]:    /api/02-gateway-auth/s3  ← this route
+  route[4]:    /api/01-backend-proxy
+  route[5]:    /api/03-presigned-uri
+Index 3 is stable as long as no new exact /api/login match is added or removed.
+*/}}
+---
+apiVersion: gateway.envoyproxy.io/v1alpha1
+kind: EnvoyPatchPolicy
+metadata:
+  name: {{ include "example-02.fullname" . }}-host-rewrite
+  namespace: default
+  labels:
+    {{- include "example-02.labels" . | nindent 4 }}
+spec:
+  targetRef:
+    group: gateway.networking.k8s.io
+    kind: Gateway
+    name: {{ .Values.gateway.name }}
+  type: JSONPatch
+  jsonPatches:
+    # host_rewrite_literal: overwrite the upstream Host header so it matches what
+    # the backend signed in the SigV4 Authorization header.
+    - type: "type.googleapis.com/envoy.config.route.v3.RouteConfiguration"
+      name: "default/{{ .Values.gateway.name }}/http"
+      operation:
+        op: add
+        path: "/virtual_hosts/0/routes/3/route/host_rewrite_literal"
+        value: "{{ .Values.s3Service.name }}.{{ .Values.s3Service.namespace }}.svc.cluster.local:{{ .Values.s3Service.port }}"
