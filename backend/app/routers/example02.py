@@ -5,8 +5,8 @@ from app.auth import decode_token
 router = APIRouter()
 
 
-@router.get("/api/02-gateway-auth/authz")
-def authz(request: Request):
+@router.get("/api/02-gateway-auth/authz{remainder:path}")
+def authz(request: Request, remainder: str = ""):
     """
     Envoy external authorization endpoint.
 
