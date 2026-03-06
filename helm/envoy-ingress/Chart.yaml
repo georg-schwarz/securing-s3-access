@@ -1,0 +1,13 @@
+apiVersion: v2
+name: envoy-ingress
+description: Envoy Gateway ingress controller with a Gateway for the tutorial examples
+type: application
+version: 0.1.0
+keywords:
+  - envoy
+  - gateway
+  - ingress
+dependencies:
+  - name: gateway-helm
+    version: v1.7.0
+    repository: oci://docker.io/envoyproxy
