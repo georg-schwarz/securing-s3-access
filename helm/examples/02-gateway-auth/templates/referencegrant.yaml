@@ -1,0 +1,16 @@
+apiVersion: gateway.networking.k8s.io/v1beta1
+kind: ReferenceGrant
+metadata:
+  name: allow-example-02-to-s3
+  namespace: {{ .Values.s3Service.namespace }}
+  labels:
+    {{- include "example-02.labels" . | nindent 4 }}
+spec:
+  from:
+    - group: gateway.networking.k8s.io
+      kind: HTTPRoute
+      namespace: example-02
+  to:
+    - group: ""
+      kind: Service
+      name: {{ .Values.s3Service.name }}

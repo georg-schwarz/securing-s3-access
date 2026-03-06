@@ -1,0 +1,28 @@
+replicaCount: 1
+
+image:
+  repository: ghcr.io/georg-schwarz/securing-s3-access-tutorial/backend
+  tag: "0.0.1-test"
+  pullPolicy: IfNotPresent
+
+backend:
+  port: 8000
+  jwtSecret: "change-me"
+  s3EndpointUrl: "http://garage-s3:3900"
+  s3AccessKeyId: "your-access-key"
+  s3SecretAccessKey: "your-secret-key"
+  s3Region: "garage"
+
+service:
+  port: 8000
+
+gateway:
+  name: envoy-ingress
+  namespace: "default"
+
+s3Service:
+  name: garage-s3
+  namespace: "default"
+  port: 3900
+
+resources: {}

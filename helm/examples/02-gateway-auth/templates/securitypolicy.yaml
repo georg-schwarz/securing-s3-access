@@ -1,0 +1,21 @@
+apiVersion: gateway.envoyproxy.io/v1alpha1
+kind: SecurityPolicy
+metadata:
+  name: {{ include "example-02.fullname" . }}-authz
+  namespace: example-02
+  labels:
+    {{- include "example-02.labels" . | nindent 4 }}
+spec:
+  targetRefs:
+    - group: gateway.networking.k8s.io
+      kind: HTTPRoute
+      name: {{ include "example-02.fullname" . }}-s3
+  extAuth:
+    http:
+      backendRefs:
+        - name: {{ include "example-02.fullname" . }}
+          namespace: example-02
+          port: {{ .Values.service.port }}
+      path: /api/02-gateway-auth/authz
+      headersToBackend:
+        - authorization

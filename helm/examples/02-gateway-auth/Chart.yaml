@@ -1,0 +1,13 @@
+apiVersion: v2
+name: example-02-gateway-auth
+description: Helm chart for Example 02 — Gateway Auth with Envoy ext-authz
+type: application
+version: 0.1.0
+appVersion: "0.0.1-test"
+keywords:
+  - s3
+  - gateway
+  - ext-authz
+  - envoy
+maintainers:
+  - name: tutorial-author

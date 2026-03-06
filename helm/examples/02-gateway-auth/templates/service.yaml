@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "example-02.fullname" . }}
+  namespace: example-02
+  labels:
+    {{- include "example-02.labels" . | nindent 4 }}
+spec:
+  type: ClusterIP
+  ports:
+    - port: {{ .Values.service.port }}
+      targetPort: {{ .Values.backend.port }}
+      protocol: TCP
+  selector:
+    {{- include "example-02.selectorLabels" . | nindent 4 }}
