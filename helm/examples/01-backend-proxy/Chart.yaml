@@ -3,7 +3,7 @@ name: example-01-backend-proxy
 description: Helm chart for Example 01 — Backend Proxy S3 access pattern
 type: application
 version: 0.1.0
-appVersion: "0.0.1-test"
+appVersion: "0.1.0"
 keywords:
   - s3
   - proxy

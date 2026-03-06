@@ -1,14 +1,14 @@
 replicaCount: 1
 
 image:
-  repository: ghcr.io/georg-schwarz/securing-s3-access-tutorial/backend
-  tag: "0.0.1-test"
+  repository: securing-s3-access/backend
+  tag: "latest"
   pullPolicy: IfNotPresent
 
 backend:
   port: 8000
   jwtSecret: "change-me"
-  s3EndpointUrl: "http://garage-s3:3900"
+  s3EndpointUrl: "http://garage-instance.default.svc.cluster.local:3900"
   s3AccessKeyId: "your-access-key"
   s3SecretAccessKey: "your-secret-key"
   s3Region: "garage"
