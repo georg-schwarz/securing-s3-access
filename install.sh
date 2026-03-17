@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # install.sh — Install all Helm charts in the correct order and run tests.
 #
-# Prerequisites: kubectl, helm, minikube (with a cluster running)
+# Prerequisites: kubectl, helm, and a local Kubernetes cluster
 #
 # Usage:
 #   ./install.sh
@@ -10,6 +10,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 HELM_DIR="$SCRIPT_DIR/helm"
+KUBE_CONTEXT="$(kubectl config current-context 2>/dev/null || true)"
 
 log()  { echo "    $*"; }
 step() { echo; echo "=== $* ==="; }
@@ -22,6 +23,7 @@ helm dependency build "$HELM_DIR/garage-operator"
 
 # ── 1. Envoy Gateway ────────────────────────────────────────────────────────
 step "Installing Envoy Gateway"
+
 helm upgrade --install envoy-ingress "$HELM_DIR/envoy-ingress" \
   --namespace default \
   --wait --timeout=5m
@@ -43,6 +45,7 @@ kubectl rollout status deployment \
 
 # ── 3. Garage Instance (with demo buckets) ───────────────────────────────────
 step "Installing Garage Instance"
+
 helm upgrade --install garage-instance "$HELM_DIR/garage-instance" \
   --namespace default \
   --timeout=10m
@@ -102,14 +105,21 @@ kubectl rollout status deployment/example-03-presigned-url \
 # ── Wait for Gateway LoadBalancer IP ─────────────────────────────────────────
 step "Waiting for Gateway external IP"
 
-echo
-echo "  To expose the LoadBalancer on localhost, run in a separate terminal:"
-echo
-echo "    sudo minikube tunnel"
-echo
-echo "  Waiting up to 5 minutes for the Gateway service to get an external IP..."
-echo "  (start 'minikube tunnel' now if you haven't already)"
-echo
+if [ "$KUBE_CONTEXT" = "minikube" ]; then
+  echo
+  echo "  To expose the LoadBalancer on localhost, run in a separate terminal:"
+  echo
+  echo "    sudo minikube tunnel"
+  echo
+  echo "  Waiting up to 5 minutes for the Gateway service to get an external IP..."
+  echo "  (start 'minikube tunnel' now if you haven't already)"
+  echo
+else
+  echo
+  echo "  Waiting up to 5 minutes for the Gateway service to get an external IP..."
+  echo "  Current kubectl context: ${KUBE_CONTEXT:-unknown}"
+  echo
+fi
 
 GW_SVC_LABELS="gateway.envoyproxy.io/owning-gateway-name=envoy-ingress,gateway.envoyproxy.io/owning-gateway-namespace=default"
 GW_SVC_NS="default"
@@ -125,16 +135,26 @@ for i in $(seq 1 24); do
 done
 [ -n "$GW_SVC_NAME" ] || die "Could not find Envoy Gateway service in $GW_SVC_NS. Check 'kubectl get svc -n $GW_SVC_NS'."
 
-# Wait for the LoadBalancer to receive an external IP (requires minikube tunnel)
+# Wait for the LoadBalancer to receive an external IP
 GATEWAY_IP=""
 for i in $(seq 1 60); do
   GATEWAY_IP=$(kubectl get svc "$GW_SVC_NAME" -n "$GW_SVC_NS" \
     -o jsonpath='{.status.loadBalancer.ingress[0].ip}' 2>/dev/null || true)
   [ -n "$GATEWAY_IP" ] && break
-  log "Waiting for external IP on $GW_SVC_NAME... ($i/60, needs 'minikube tunnel')"
+  if [ "$KUBE_CONTEXT" = "minikube" ]; then
+    log "Waiting for external IP on $GW_SVC_NAME... ($i/60, needs 'minikube tunnel')"
+  else
+    log "Waiting for external IP on $GW_SVC_NAME... ($i/60)"
+  fi
   sleep 5
 done
-[ -n "$GATEWAY_IP" ] || die "Gateway service never received an external IP. Make sure 'minikube tunnel' is running."
+
+if [ -z "$GATEWAY_IP" ]; then
+  if [ "$KUBE_CONTEXT" = "minikube" ]; then
+    die "Gateway service never received an external IP. Make sure 'minikube tunnel' is running."
+  fi
+  die "Gateway service never received an external IP. Check your local cluster's LoadBalancer support."
+fi
 
 GATEWAY_URL="http://$GATEWAY_IP"
 log "Gateway is reachable at $GATEWAY_URL"

@@ -22,6 +22,12 @@ Prerequisites:
 
 Setup:
 
+If you need to reset a broken local install before trying again, run:
+
+```bash
+./uninstall.sh
+```
+
 ### Option A: Minikube
 
 **1. Start minikube**
