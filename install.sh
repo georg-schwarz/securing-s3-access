@@ -15,6 +15,11 @@ log()  { echo "    $*"; }
 step() { echo; echo "=== $* ==="; }
 die()  { echo "ERROR: $*" >&2; exit 1; }
 
+# ── 0. Helm dependencies ──────────────────────────────────────────────────────
+step "Building Helm chart dependencies"
+helm dependency build "$HELM_DIR/envoy-ingress"
+helm dependency build "$HELM_DIR/garage-operator"
+
 # ── 1. Envoy Gateway ────────────────────────────────────────────────────────
 step "Installing Envoy Gateway"
 helm upgrade --install envoy-ingress "$HELM_DIR/envoy-ingress" \
