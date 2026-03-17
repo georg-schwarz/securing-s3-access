@@ -1,4 +1,6 @@
-# Securing S3 Access — Tutorial Repository
+# Securing S3 Access
+
+This is a companion repository for the article "[Securing S3 Objects: Backend Proxy vs Gateway Auth vs Presigned URLs](https://georg-schwarz.com/blog/securing-s3-objects-backend-proxy-gateway-auth-presigned-urls/)".
 
 This repository demonstrates three different approaches to securing access to a
 [Garage](https://garagehq.deuxfleurs.fr/) S3-compatible storage API deployed on
