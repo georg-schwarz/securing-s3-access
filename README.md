@@ -1,6 +1,6 @@
 # Securing S3 Access — Tutorial Repository
 
-This repository demonstrates four different approaches to securing access to a
+This repository demonstrates three different approaches to securing access to a
 [Garage](https://garagehq.deuxfleurs.fr/) S3-compatible storage API deployed on
 Kubernetes. Each example deployment lives in its own directory under `helm/examples/` and can
 be deployed independently on top of the shared infrastructure defined in the
@@ -11,7 +11,6 @@ The examples share a common demo backend in the `backend` directory. It provides
 - `api/01-backend-proxy/file/{fileId}` endpoint for example 01.
 - `api/02-gateway-auth/authz` endpoint for example 02.
 - `api/03-presigned-uri/file/{fileId}` endpoint for example 03.
-- `api/04-temp-credentials/access` endpoint for example 04.
 
 ## How to run
 
